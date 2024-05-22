@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin' # Use 'adopt', 'zulu', etc.
+        java-version: '11'
+
+    - name: Download JUnit 5
+      run: |
+        mkdir -p lib
+        curl -L -o lib/junit-platform-console-standalone-1.8.2.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.8.2/junit-platform-console-standalone-1.8.2.jar
+
+    - name: Compile Java code
+      run: javac -d out -cp lib/junit-platform-console-standalone-1.8.2.jar src/com/ontrack/model/Task.java src/com/ontrack/service/TaskInboxService.java
+
+    - name: Compile Test code
+      run: javac -d out/test-classes -cp out:lib/junit-platform-console-standalone-1.8.2.jar src/com/ontrack/service/TaskInboxServiceTest.java
+
+    - name: Run Tests
+      run: java -jar lib/junit-platform-console-standalone-1.8.2.jar --class-path out:test-classes --scan-class-path
